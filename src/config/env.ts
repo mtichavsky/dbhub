@@ -190,6 +190,28 @@ export function resolvePort(): { port: number; source: string } {
 }
 
 /**
+ * Resolve instructions from command line args or environment variables
+ * Returns instructions string or undefined if not provided
+ */
+export function resolveInstructions(): { instructions: string | undefined; source: string } {
+  // Get command line arguments
+  const args = parseCommandLineArgs();
+
+  // 1. Check command line arguments first (highest priority)
+  if (args.instructions) {
+    return { instructions: args.instructions, source: "command line argument" };
+  }
+
+  // 2. Check environment variables
+  if (process.env.INSTRUCTIONS) {
+    return { instructions: process.env.INSTRUCTIONS, source: "environment variable" };
+  }
+
+  // 3. Default to undefined
+  return { instructions: undefined, source: "default" };
+}
+
+/**
  * Redact sensitive information from a DSN string
  * Replaces the password with asterisks
  * @param dsn - The DSN string to redact

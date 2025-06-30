@@ -8,7 +8,7 @@ import { fileURLToPath } from "url";
 
 import { ConnectorManager } from "./connectors/manager.js";
 import { ConnectorRegistry } from "./connectors/interface.js";
-import { resolveDSN, resolveTransport, resolvePort, isDemoMode, redactDSN, isReadOnlyMode } from "./config/env.js";
+import { resolveDSN, resolveTransport, resolvePort, isDemoMode, redactDSN, isReadOnlyMode, resolveInstructions } from "./config/env.js";
 import { getSqliteInMemorySetupSql } from "./config/demo-loader.js";
 import { registerResources } from "./resources/index.js";
 import { registerTools } from "./tools/index.js";
@@ -76,12 +76,27 @@ See documentation for more details on configuring database connections.
       process.exit(1);
     }
 
+    const instructionsData = resolveInstructions();
+
+    if (instructionsData.instructions) {
+      console.error(`Instructions source: ${instructionsData.source}`);
+    }
+    
     // Create MCP server factory function for HTTP transport
     const createServer = () => {
-      const server = new McpServer({
+      const serverConfig: any = {
         name: SERVER_NAME,
         version: SERVER_VERSION,
-      });
+      };
+
+      let server: McpServer;
+      if (instructionsData.instructions) {
+        server = new McpServer(serverConfig, {
+          instructions: instructionsData.instructions,
+        });
+      } else {
+        server = new McpServer(serverConfig);
+      }
 
       // Register resources, tools, and prompts
       registerResources(server);
